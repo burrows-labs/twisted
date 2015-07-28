@@ -956,9 +956,14 @@ class IMAP4Server(basic.LineReceiver, policies.TimeoutMixin):
     def do_NOOP(self, tag):
         self.sendPositiveResponse(tag, 'NOOP No operation performed')
 
+    def do_select_NOOP(self, tag):
+        self.sendUntaggedResponse(str(self.mbox.getMessageCount()) + ' EXISTS')
+        self.sendUntaggedResponse(str(self.mbox.getRecentCount()) + ' RECENT')
+        self.sendPositiveResponse(tag, 'NOOP completed')
+
     unauth_NOOP = (do_NOOP,)
     auth_NOOP = unauth_NOOP
-    select_NOOP = unauth_NOOP
+    select_NOOP = (do_select_NOOP,)
     logout_NOOP = unauth_NOOP
 
     def do_AUTHENTICATE(self, tag, args):
