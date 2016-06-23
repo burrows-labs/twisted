@@ -4887,7 +4887,18 @@ def _getContentType(msg):
                 major, minor = type
             else:
                 major = minor = None
-            attrs = dict(x.strip().lower().split('=', 1) for x in mimetype[1:])
+            """
+            RFC1341
+
+            The type, subtype, and parameter names are not case sensitive.
+            For example, TEXT, Text, and TeXt are all equivalent. Parameter
+            values are normally case sensitive, but certain parameters are
+            interpreted to be case- insensitive, depending on the intended
+            use. (For example, multipart boundaries are case-sensitive, but
+            the "access- type" for message/External-body is not
+            case-sensitive.)
+            """
+            attrs = dict(x.strip().split('=', 1) for x in mimetype[1:])
         else:
             major = minor = None
     else:
