@@ -4966,7 +4966,7 @@ class _MessageStructure(object):
                 disp = (disp[0].lower(), None)
             elif len(disp) > 1:
                 # XXX Poorly tested parser
-                params = [x for param in disp[1:] for x in param.split('=', 1)]
+                params = [unquote(x) for param in disp[1:] for x in param.split('=', 1)]
                 disp = [disp[0].lower(), params]
             return disp
         else:
