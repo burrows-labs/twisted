@@ -5652,7 +5652,7 @@ class ICloseableMailbox(Interface):
 def _formatHeaders(headers):
     hdrs = [': '.join((k.title(), '\r\n'.join(v.splitlines()))) for (k, v)
             in headers.iteritems()]
-    hdrs = '\r\n'.join(hdrs) + '\r\n'
+    hdrs = '\r\n'.join(hdrs) + '\r\n\r\n'
     return hdrs
 
 def subparts(m):
@@ -5735,7 +5735,6 @@ class MessageProducer:
                     boundary = boundary[1:-1]
 
         self.write(_formatHeaders(headers))
-        self.write('\r\n')
         if self.msg.isMultipart():
             for p in subparts(self.msg):
                 self.write('\r\n--%s\r\n' % (boundary,))
