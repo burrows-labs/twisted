@@ -731,7 +731,7 @@ class SMTP(basic.LineOnlyReceiver, policies.TimeoutMixin):
         for (user, msgFunc) in recipients:
             try:
                 msg = msgFunc()
-                rcvdhdr = self.receivedHeader(helo, origin, [user])
+                rcvdhdr = self.receivedHeader(helo, origin, [u for (u, _) in recipients])
                 if rcvdhdr:
                     msg.lineReceived(rcvdhdr)
                 msgs.append(msg)

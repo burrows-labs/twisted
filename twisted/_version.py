@@ -10,4 +10,4 @@ Provides Twisted version information.
 from twisted.python import versions
 # Let's avoid conflating preveil development release versions with official
 # twisted version numbers.
-version = versions.Version('twisted', 160, 1, 2)
+version = versions.Version('twisted', 160, 1, 3)
