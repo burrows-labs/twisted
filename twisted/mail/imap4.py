@@ -1338,7 +1338,7 @@ class IMAP4Server(basic.LineReceiver, policies.TimeoutMixin):
             self.sendNegativeResponse(tag, '[TRYCREATE] No such mailbox')
             return
 
-        d = mbox.addMessage(message, flags, date)
+        d = mbox.appendMessage(message, flags, date)
         d.addCallback(self.__cbAppend, tag, mbox)
         d.addErrback(self.__ebAppend, tag)
 
@@ -2103,8 +2103,7 @@ class IMAP4Server(basic.LineReceiver, policies.TimeoutMixin):
         if not mbox:
             self.sendNegativeResponse(tag, 'No such mailbox: ' + mailbox)
         else:
-            maybeDeferred(self.mbox.fetch, messages, uid
-                ).addCallback(self.__cbCopy, tag, mbox
+            maybeDeferred(self.__cbCopy, mbox, messages, uid
                 ).addCallback(self.__cbCopied, tag, mbox
                 ).addErrback(self.__ebCopy, tag
                 )
@@ -2112,47 +2111,17 @@ class IMAP4Server(basic.LineReceiver, policies.TimeoutMixin):
     def _ebCopySelectedMailbox(self, failure, tag):
         self.sendBadResponse(tag, 'Server error: ' + str(failure.value))
 
-    def __cbCopy(self, messages, tag, mbox):
-        # XXX - This should handle failures with a rollback or something
-        addedDeferreds = []
+    def __cbCopy(self, mbox, messages, uid):
+        return self.mbox.copyMessage(mbox, messages, uid)
 
-        fastCopyMbox = IMessageCopier(mbox, None)
-        for (id, msg) in messages:
-            if fastCopyMbox is not None:
-                d = maybeDeferred(fastCopyMbox.copy, msg)
-                addedDeferreds.append(d)
-                continue
-
-            # XXX - The following should be an implementation of IMessageCopier.copy
-            # on an IMailbox->IMessageCopier adapter.
-
-            flags = msg.getFlags()
-            date = msg.getInternalDate()
-
-            body = IMessageFile(msg, None)
-            if body is not None:
-                bodyFile = body.open()
-                d = maybeDeferred(mbox.addMessage, bodyFile, flags, date)
-            else:
-                def rewind(f):
-                    f.seek(0)
-                    return f
-                buffer = tempfile.TemporaryFile()
-                d = MessageProducer(msg, buffer, self._scheduler
-                    ).beginProducing(None
-                    ).addCallback(lambda _, b=buffer, f=flags, d=date: mbox.addMessage(rewind(b), f, d)
-                    )
-            addedDeferreds.append(d)
-        return defer.DeferredList(addedDeferreds)
-
-    def __cbCopied(self, deferredIds, tag, mbox):
+    def __cbCopied(self, resultIds, tag, mbox):
         ids = []
         failures = []
-        for (status, result) in deferredIds:
+        for (status, result) in resultIds:
             if status:
                 ids.append(result)
             else:
-                failures.append(result.value)
+                failures.append(result)
         if failures:
             self.sendNegativeResponse(tag, '[ALERT] Some messages were not copied')
         else:
@@ -5558,8 +5527,8 @@ class IMailbox(IMailboxInfo):
         this mailbox.
         """
 
-    def addMessage(message, flags = (), date = None):
-        """Add the given message to this mailbox.
+    def appendMessage(message, flags = (), date = None):
+        """Append the given message to this mailbox.
 
         @type message: A file-like object
         @param message: The RFC822 formatted message
@@ -5579,6 +5548,29 @@ class IMailbox(IMailboxInfo):
         @raise ReadOnlyMailbox: Raised if this Mailbox is not open for
         read-write.
         """
+
+    def copyMessage(dest_mailbox, message_set, uid = False):
+        """Copy message from @self to @dest_mailbox.
+
+        @type dest_mailbox: Object that implements IMailbox
+        @param dest_mailbox: The destination mailbox
+
+        @type message_set: C{MessageSet}
+        @param message_set: The identifiers of messages to copy.
+
+        @type uid: C{bool}
+        @param uid: If true, the IDs specified in the query are UIDs;
+        otherwise they are message sequence IDs.
+
+        @rtype: C{List (bool, int)}
+        @return: A list of tuples where the first element indicates whether
+        the copy was successful and the second element is the ID for the
+        relevant message.
+
+        @raise ReadOnlyMailbox: Raised if this Mailbox is not open for
+        read-write.
+        """
+
 
     def expunge():
         """Remove all messages flagged \\Deleted.
