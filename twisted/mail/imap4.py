@@ -1440,8 +1440,12 @@ class IMAP4Server(basic.LineReceiver, policies.TimeoutMixin):
         else:
             # that's not the ideal way to get all messages, there should be a
             # method on mailboxes that gives you all of them
+            #
+            # It's perfectly valid to do a seq# SEARCH on an empty mailbox,
+            # but it's invalid to reference an 'unoccupied' seq# during a
+            # FETCH. Therefore we must set `uid=True` during this fetch().
             s = parseIdList('1:*')
-            maybeDeferred(self.mbox.fetch, s, uid=uid
+            maybeDeferred(self.mbox.fetch, s, uid=True
                           ).addCallback(self.__cbManualSearch,
                                         tag, self.mbox, query, uid
                           ).addErrback(self.__ebSearch, tag)
