@@ -79,7 +79,7 @@ class Portal(object):
             self.checkers[credentialInterface] = checker
 
 
-    def login(self, credentials, mind, *interfaces):
+    def login(self, credentials, mind, *interfaces, **transport):
         """
         @param credentials: an implementor of
             L{twisted.cred.credentials.ICredentials}
@@ -116,7 +116,7 @@ class Portal(object):
         """
         for i in self.checkers:
             if i.providedBy(credentials):
-                return maybeDeferred(self.checkers[i].requestAvatarId, credentials
+                return maybeDeferred(self.checkers[i].requestAvatarId, credentials, transport.get('transport'),
                     ).addCallback(self.realm.requestAvatar, mind, *interfaces
                     )
         ifac = providedBy(credentials)
