@@ -1005,7 +1005,7 @@ class IMAP4Server(basic.LineReceiver, policies.TimeoutMixin):
         if chal.moreChallenges():
             self._setupChallenge(chal, tag)
         else:
-            self.portal.login(chal, None, IAccount).addCallbacks(
+            self.portal.login(chal, None, IAccount, transport=self.transport).addCallbacks(
                 self.__cbAuthResp,
                 self.__ebAuthResp,
                 (tag,), None, (tag,), None
@@ -1077,7 +1077,7 @@ class IMAP4Server(basic.LineReceiver, policies.TimeoutMixin):
         if self.portal:
             return self.portal.login(
                 credentials.UsernamePassword(user, passwd),
-                None, IAccount
+                None, IAccount, transport=self.transport
             )
         raise UnauthorizedLogin()
 

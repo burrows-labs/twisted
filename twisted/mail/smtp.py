@@ -891,7 +891,8 @@ class SMTP(basic.LineOnlyReceiver, policies.TimeoutMixin):
             result = self.portal.login(
                 cred.credentials.Anonymous(),
                 None,
-                IMessageDeliveryFactory, IMessageDelivery)
+                IMessageDeliveryFactory, IMessageDelivery,
+                transport=self.transport)
 
             def ebAuthentication(err):
                 """
@@ -1799,7 +1800,8 @@ class ESMTP(SMTP):
         self.mode = COMMAND
         result = self.portal.login(
             self.challenger, None,
-            IMessageDeliveryFactory, IMessageDelivery)
+            IMessageDeliveryFactory, IMessageDelivery,
+            transport=self.transport)
         result.addCallback(self._cbAuthenticated)
         result.addCallback(lambda ign: self.sendCode(235, 'Authentication successful.'))
         result.addErrback(self._ebAuthenticated)
