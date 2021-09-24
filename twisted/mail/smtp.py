@@ -2022,9 +2022,8 @@ class ESMTPSender(SenderMixin, ESMTPClient):
 
     def _registerAuthenticators(self):
         # Register Authenticator in order from most secure to least secure
-        self.registerAuthenticator(CramMD5ClientAuthenticator(self.username))
-        self.registerAuthenticator(LOGINAuthenticator(self.username))
         self.registerAuthenticator(PLAINAuthenticator(self.username))
+        self.registerAuthenticator(LOGINAuthenticator(self.username))        
 
     def _getContextFactory(self):
         if self.context is not None:
